@@ -1,0 +1,335 @@
+<title>الحاسبة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap">
+<style>
+  /* Layout: an old office adding machine — olive metal body, LCD window, chunky keys, and a printed paper roll for the history */
+  :root {
+    --ground: #20251f;
+    --metal: #4a5644;
+    --metal-edge: #343d30;
+    --lcd: #b7c4a0;
+    --lcd-ink: #1e2a19;
+    --lcd-ghost: #a3b08c;
+    --key: #e4e1d8;
+    --key-ink: #24281f;
+    --key-side: #a9a596;
+    --op: #77846b;
+    --op-ink: #f3f1ea;
+    --op-side: #4f5a46;
+    --accent: #f2b632;
+    --accent-ink: #2a2005;
+    --accent-side: #b9861a;
+    --paper: #fbfbf7;
+    --paper-ink: #3b3f38;
+    --paper-dim: #7d8278;
+    --label: #c9d1bf;
+    --f-ui: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    --f-lcd: "Share Tech Mono", "JetBrains Mono", ui-monospace, Consolas, monospace;
+    --f-print: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 30%, #2c3329 0%, var(--ground) 70%);
+    background-color: var(--ground);
+    color: var(--label); font-family: var(--f-ui);
+    padding: 24px 16px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wrap { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 740px; }
+
+  .calc {
+    background: linear-gradient(180deg, #56634f 0%, var(--metal) 40%, #414c3c 100%);
+    border-radius: 18px 18px 26px 26px;
+    box-shadow: 0 0 0 1px var(--metal-edge), 0 18px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.12);
+    padding: 20px 20px 24px; width: 100%; max-width: 360px; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .top b { font-weight: 600; color: var(--label); font-size: 14px; letter-spacing: .02em; }
+  .toggle {
+    font: 500 12px var(--f-ui); color: var(--label); background: rgba(0,0,0,.22);
+    border: 1px solid rgba(0,0,0,.25); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .toggle:hover { background: rgba(0,0,0,.32); }
+  .toggle:focus-visible, .key:focus-visible, .tape button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .screen {
+    background: var(--lcd); color: var(--lcd-ink); border-radius: 6px;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,.35), 0 0 0 6px #2b3227, 0 0 0 7px #1c211a;
+    margin: 7px; padding: 12px 14px; min-height: 96px; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 4px;
+    direction: ltr; font-family: var(--f-lcd); font-variant-numeric: tabular-nums; overflow: hidden;
+  }
+  .expr { color: #4d5a43; font-size: 15px; min-height: 1.3em; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+  .result { font-size: 44px; line-height: 1; max-width: 100%; overflow-x: auto; white-space: nowrap; text-shadow: 1px 1px 0 var(--lcd-ghost); }
+  .result.small { font-size: 30px; }
+  .result.err { font-family: var(--f-ui); font-size: 20px; font-weight: 600; }
+
+  .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 10px; direction: ltr; }
+  .key {
+    font: 400 24px var(--f-lcd); color: var(--key-ink); background: var(--key);
+    border: 0; border-radius: 10px; height: 58px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--key-side), 0 7px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
+    transition: transform .05s, box-shadow .05s;
+  }
+  .key:active, .key.pressed { transform: translateY(4px); box-shadow: 0 1px 0 var(--key-side), 0 2px 3px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.6); }
+  .key.op, .key.fn { background: var(--op); color: var(--op-ink); box-shadow: 0 5px 0 var(--op-side), 0 7px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18); }
+  .key.op:active, .key.op.pressed, .key.fn:active, .key.fn.pressed { box-shadow: 0 1px 0 var(--op-side), 0 2px 3px rgba(0,0,0,.3); }
+  .key.fn { font: 600 16px var(--f-ui); }
+  .key.eq { background: var(--accent); color: var(--accent-ink); font-size: 28px; box-shadow: 0 5px 0 var(--accent-side), 0 7px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.4); }
+  .key.eq:active, .key.eq.pressed { box-shadow: 0 1px 0 var(--accent-side), 0 2px 3px rgba(0,0,0,.3); }
+  .key.zero { grid-column: span 2; }
+
+  /* paper roll with a torn bottom edge */
+  .tape {
+    background: var(--paper); color: var(--paper-ink);
+    width: 100%; max-width: 280px; box-sizing: border-box; min-width: 0;
+    padding: 18px 18px 26px; display: flex; flex-direction: column; gap: 10px;
+    -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat, conic-gradient(from 135deg at top, #000 90deg, #0000 0) bottom / 14px 7px repeat-x;
+            mask: linear-gradient(#000 0 0) top / 100% calc(100% - 7px) no-repeat, conic-gradient(from 135deg at top, #000 90deg, #0000 0) bottom / 14px 7px repeat-x;
+  }
+  .tape h2 { margin: 0; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline;
+             padding-bottom: 10px; border-bottom: 1px dashed var(--paper-dim); }
+  .tape h2 button { font: 400 12px var(--f-ui); color: var(--paper-dim); background: none; border: 0; cursor: pointer; padding: 0; }
+  .tape h2 button:hover { color: var(--paper-ink); text-decoration: underline; }
+  .note { font-size: 12px; color: var(--paper-dim); margin: 0; }
+  .tape ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; overflow-y: auto; max-height: 380px; }
+  .tape li + li { border-top: 1px dotted #d6d8cf; }
+  .tape li button {
+    width: 100%; direction: ltr; background: none; border: 0;
+    padding: 8px 4px; cursor: pointer; color: var(--paper-ink);
+    font-family: var(--f-print); font-variant-numeric: tabular-nums; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  }
+  .tape li button:hover { background: #f0f1ea; }
+  .tape li .e { font-size: 12px; color: var(--paper-dim); }
+  .tape li .r { font-size: 17px; font-weight: 500; }
+  .tape li .r::before { content: "= "; color: var(--paper-dim); font-weight: 400; }
+  .empty { color: var(--paper-dim); font-size: 13px; padding: 8px 0; }
+
+  @media (max-width: 420px) {
+    .key { height: 52px; font-size: 21px; }
+    .result { font-size: 36px; }
+    .tape { max-width: 360px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .key { transition: none; } }
+</style>
+
+<div class="wrap" dir="rtl">
+  <section class="calc" aria-label="الحاسبة">
+    <div class="top">
+      <b>الحاسبة</b>
+      <button class="toggle" id="digits-toggle" type="button" aria-pressed="false">أرقام عربية ١٢٣</button>
+    </div>
+    <div class="screen" aria-live="polite">
+      <div class="expr" id="expr"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="keys" id="keys">
+      <button class="key fn" data-k="C" id="k-clear">مسح</button>
+      <button class="key fn" data-k="B" aria-label="حذف آخر خانة">⌫</button>
+      <button class="key op" data-k="%">%</button>
+      <button class="key op" data-k="/" aria-label="قسمة">÷</button>
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key op" data-k="*" aria-label="ضرب">×</button>
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key op" data-k="-" aria-label="طرح">−</button>
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key op" data-k="+" aria-label="جمع">+</button>
+      <button class="key zero" data-k="0">0</button>
+      <button class="key" data-k=".">.</button>
+      <button class="key eq" data-k="=" aria-label="يساوي">=</button>
+    </div>
+  </section>
+
+  <aside class="tape" aria-label="السجل">
+    <h2>السجل <button type="button" id="clear-tape">مسح السجل</button></h2>
+    <p class="note" id="tape-note">أمثلة للتوضيح. اضغط على أي نتيجة لاستخدامها.</p>
+    <ol id="tape"></ol>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const OPS = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+  const AR = '٠١٢٣٤٥٦٧٨٩';
+  const exprEl = document.getElementById('expr');
+  const resEl = document.getElementById('result');
+  const tapeEl = document.getElementById('tape');
+  const noteEl = document.getElementById('tape-note');
+  const toggle = document.getElementById('digits-toggle');
+
+  let tokens = [];        // numbers (strings) and operators
+  let cur = '0';          // number being typed
+  let justEvaluated = false;
+  let error = null;
+  let arabic = false;
+  let examples = true;
+  let history = [
+    { e: '1250 × 15 %', r: '187.5' },
+    { e: '36 ÷ 4 + 7', r: '16' },
+    { e: '2.5 × 8 − 3', r: '17' },
+  ];
+
+  try { arabic = localStorage.getItem('calc-arabic') === '1'; } catch (_) {}
+
+  const loc = s => arabic ? String(s).replace(/\d/g, d => AR[d]).replace(/\./g, '٫') : String(s);
+
+  function fmt(n) {
+    if (!isFinite(n)) return null;
+    let r = parseFloat(n.toPrecision(12));
+    if (Math.abs(r) >= 1e15 || (r !== 0 && Math.abs(r) < 1e-9)) return r.toExponential(6).replace(/\.?0+e/, 'e');
+    return String(r);
+  }
+
+  function evaluate(list) {
+    // shunting-yard with standard precedence
+    const prec = { '+': 1, '-': 1, '*': 2, '/': 2 };
+    const out = [], st = [];
+    for (const t of list) {
+      if (t in prec) {
+        while (st.length && prec[st[st.length - 1]] >= prec[t]) out.push(st.pop());
+        st.push(t);
+      } else out.push(parseFloat(t));
+    }
+    while (st.length) out.push(st.pop());
+    const s = [];
+    for (const t of out) {
+      if (typeof t === 'number') { s.push(t); continue; }
+      const b = s.pop(), a = s.pop();
+      if (t === '/' && b === 0) throw new Error('div0');
+      s.push(t === '+' ? a + b : t === '-' ? a - b : t === '*' ? a * b : a / b);
+    }
+    return s[0];
+  }
+
+  const show = list => list.map(t => OPS[t] ? ` ${OPS[t]} ` : loc(t)).join('');
+
+  function render() {
+    exprEl.textContent = show(tokens);
+    resEl.className = 'result';
+    if (error) { resEl.textContent = error; resEl.classList.add('err'); return; }
+    resEl.textContent = loc(cur);
+    if (cur.length > 11) resEl.classList.add('small');
+  }
+
+  function renderTape() {
+    noteEl.hidden = !examples || !history.length;
+    tapeEl.innerHTML = '';
+    if (!history.length) {
+      const li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = 'لا توجد عمليات بعد.';
+      tapeEl.appendChild(li);
+      return;
+    }
+    history.forEach(h => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = '<span class="e"></span><span class="r"></span>';
+      b.querySelector('.e').textContent = loc(h.e);
+      b.querySelector('.r').textContent = loc(h.r);
+      b.addEventListener('click', () => { error = null; cur = h.r; tokens = []; justEvaluated = true; render(); });
+      li.appendChild(b);
+      tapeEl.appendChild(li);
+    });
+  }
+
+  function press(k) {
+    if (error && k !== 'C') { error = null; cur = '0'; tokens = []; }
+    if (/\d/.test(k)) {
+      if (justEvaluated) { cur = '0'; justEvaluated = false; }
+      if (cur.replace(/[-.]/g, '').length >= 15) return;
+      cur = cur === '0' ? k : cur === '-0' ? '-' + k : cur + k;
+    } else if (k === '.') {
+      if (justEvaluated) { cur = '0'; justEvaluated = false; }
+      if (!cur.includes('.')) cur += '.';
+    } else if (k in OPS) {
+      justEvaluated = false;
+      if (cur === '' && tokens.length) tokens[tokens.length - 1] = k;
+      else { tokens.push(cur.replace(/\.$/, '')); tokens.push(k); }
+      cur = '';
+    } else if (k === '%') {
+      if (cur === '') return;
+      const v = parseFloat(cur);
+      const base = tokens.length >= 2 && (tokens[tokens.length - 1] === '+' || tokens[tokens.length - 1] === '-')
+        ? evaluate(tokens.slice(0, -1)) : 1;
+      cur = fmt(v / 100 * base);
+      justEvaluated = false;
+    } else if (k === 'B') {
+      if (justEvaluated) return;
+      if (cur.length > 1) cur = cur.slice(0, -1);
+      else if (cur === '' && tokens.length) { tokens.pop(); cur = tokens.pop() || '0'; }
+      else cur = '0';
+      if (cur === '-') cur = '0';
+    } else if (k === 'C') {
+      tokens = []; cur = '0'; error = null; justEvaluated = false;
+    } else if (k === '=') {
+      if (!tokens.length) return;
+      const list = cur === '' ? tokens.slice(0, -1) : [...tokens, cur.replace(/\.$/, '')];
+      try {
+        const r = fmt(evaluate(list));
+        if (r === null) throw new Error('nan');
+        const e = show(list).trim();
+        if (examples) { history = []; examples = false; }
+        history.unshift({ e: list.map(t => OPS[t] ? ` ${OPS[t]} ` : t).join(''), r });
+        history = history.slice(0, 30);
+        tokens = []; cur = r; justEvaluated = true;
+        renderTape();
+      } catch (err) {
+        error = err.message === 'div0' ? 'لا يمكن القسمة على صفر' : 'عملية غير صالحة';
+        tokens = []; cur = '0';
+      }
+    }
+    render();
+  }
+
+  document.getElementById('keys').addEventListener('click', e => {
+    const b = e.target.closest('.key');
+    if (b) press(b.dataset.k);
+  });
+
+  const keyMap = { Enter: '=', '=': '=', Backspace: 'B', Escape: 'C', Delete: 'C', ',': '.' };
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    let k = e.key;
+    const ai = AR.indexOf(k);
+    if (ai >= 0) k = String(ai);
+    if (k === 'x' || k === 'X') k = '*';
+    k = keyMap[k] || k;
+    if (!/^[\d.+\-*/%=BC]$/.test(k)) return;
+    e.preventDefault();
+    press(k);
+    const btn = document.querySelector(`.key[data-k="${CSS.escape(k)}"]`);
+    if (btn) { btn.classList.add('pressed'); setTimeout(() => btn.classList.remove('pressed'), 100); }
+  });
+
+  function setDigits() {
+    toggle.textContent = arabic ? 'أرقام إنجليزية 123' : 'أرقام عربية ١٢٣';
+    toggle.setAttribute('aria-pressed', String(arabic));
+    document.querySelectorAll('.key[data-k]').forEach(b => {
+      if (/^\d$/.test(b.dataset.k)) b.textContent = loc(b.dataset.k);
+      if (b.dataset.k === '.') b.textContent = arabic ? '٫' : '.';
+    });
+    render(); renderTape();
+  }
+  toggle.addEventListener('click', () => {
+    arabic = !arabic;
+    try { localStorage.setItem('calc-arabic', arabic ? '1' : '0'); } catch (_) {}
+    setDigits();
+  });
+
+  document.getElementById('clear-tape').addEventListener('click', () => { history = []; examples = false; renderTape(); });
+
+  setDigits();
+})();
+</script>
